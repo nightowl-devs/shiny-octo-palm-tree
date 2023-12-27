@@ -8,6 +8,6 @@ sudo ufw allow 22
 sudo ufw allow 5512
 sudo ufw allow 5511
 sudo ufw allow 1:5655/tcp
-sudo ufw allow 1:5655/tcp
+sudo ufw allow 1:5655/udp
 sudo ufw enable
 sudo ufw status
