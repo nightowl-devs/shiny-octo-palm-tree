@@ -1,3 +1,5 @@
-root:password:2023-12-31
+root:w:2024-12-31:ROOT  
 
-nigga:braindead:2023-12-31
+nigga:braindead:2023-12-31:VIP
+domis:owlc2dladomisia:2024-12-31
+test:test:2024-01-01

